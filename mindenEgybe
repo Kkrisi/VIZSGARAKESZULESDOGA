@@ -1,0 +1,153 @@
+package hu.szamalk.nezet;
+
+import hu.szamalk.modell.GuiKonfigModell;
+
+import javax.swing.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class GuiForm {
+    private JComboBox cmbElemek;
+    private JButton btnFelvesz;
+    private JList list1;
+    private JCheckBox chbMozgat;
+    private JTextField txtElem;
+    private JPanel pnlMain;
+
+    private JFrame frame;
+    private JMenuItem mitMent, mitBetolt;
+
+    public GuiForm() {
+        ini();
+
+        btnFelvesz.addActionListener(e -> {
+            String elem = "elem: " + (int) (Math.random() * 100);
+            if (!txtElem.getText().isBlank()) {
+                elem = txtElem.getText();
+            }
+            cmbElemek.addItem(elem);
+            txtElem.setText("");
+        });
+
+        cmbElemek.addActionListener(e -> {
+            String elem = (String) cmbElemek.getSelectedItem();
+            int i = cmbElemek.getSelectedIndex();
+
+            if (i > 0) {
+                DefaultListModel<String> lm = (DefaultListModel<String>) list1.getModel();
+                lm.addElement(elem);
+
+                if (chbMozgat.isSelected()) {
+                    cmbElemek.removeItem(elem);
+                    cmbElemek.setSelectedIndex(0);
+                }
+            }
+        });
+
+        list1.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    String elem = (String) list1.getSelectedValue();
+                    DefaultListModel dlm = (DefaultListModel) list1.getModel();
+                    dlm.removeElement(elem);
+                }
+            }
+        });
+
+        mitMent.addActionListener(e -> {
+            JFileChooser jfc = new JFileChooser(new File(System.getProperty("user.dir")));
+            if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                File fajl = jfc.getSelectedFile();
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fajl))) {
+                    GuiKonfigModell modell = new GuiKonfigModell();
+                    modell.setChbMozgat(chbMozgat.isSelected());
+
+                    List<String> cl = new ArrayList<>();
+                    for (int i = 0; i < cmbElemek.getItemCount(); i++) {
+                        cl.add((String) cmbElemek.getItemAt(i));
+                    }
+                    modell.setComboSzovegek(cl);
+
+                    List<String> ll = new ArrayList<>();
+                    ListModel lm = list1.getModel();
+                    for (int i = 0; i < lm.getSize(); i++) {
+                        ll.add((String) lm.getElementAt(i));
+                    }
+                    modell.setListSzovegek(ll);
+
+                    oos.writeObject(modell);
+                } catch (FileNotFoundException ex) {
+                    System.err.println("mentés: Nincs meg a fájl: " + ex.getMessage());
+                    ex.printStackTrace();
+                } catch (IOException ex) {
+                    System.err.println("mentés: I/O hiba: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        mitBetolt.addActionListener(e -> {
+            JFileChooser jfc = new JFileChooser(new File(System.getProperty("user.dir")));
+            if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                File fajl = jfc.getSelectedFile();
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fajl))) {
+                    GuiKonfigModell modell = (GuiKonfigModell) ois.readObject();
+                    chbMozgat.setSelected(modell.isChbMozgat());
+
+                    DefaultComboBoxModel<String> dlm = (DefaultComboBoxModel<String>) cmbElemek.getModel();
+                    for (String s : modell.getComboSzovegek()) {
+                        dlm.addElement(s);
+                    }
+
+                    DefaultListModel<String> listModel = (DefaultListModel<String>) list1.getModel();
+                    for (String s : modell.getListSzovegek()) {
+                        listModel.addElement(s);
+                    }
+
+                } catch (FileNotFoundException ex) {
+                    System.err.println("olvasás: Nincs meg a fájl: " + ex.getMessage());
+                    ex.printStackTrace();
+                } catch (IOException | ClassNotFoundException ex) {
+                    System.err.println("olvasás: I/O hiba: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void ini() {
+        frame = new JFrame("Combo + List");
+        frame.setContentPane(pnlMain);
+        frame.setSize(520, 240);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+
+        DefaultListModel<String> dlm = new DefaultListModel<>();
+        list1.setModel(dlm);
+
+        mitMent = new JMenuItem("Mentés");
+        mitBetolt = new JMenuItem("Betölt");
+        JMenuItem mitKilep = new JMenuItem("Kilépés");
+
+        JMenu mnuPrg = new JMenu("Program");
+        mnuPrg.add(mitMent);
+        mnuPrg.add(mitBetolt);
+        mnuPrg.add(new JSeparator());
+        mnuPrg.add(mitKilep);
+
+        JMenuBar mnuBar = new JMenuBar();
+        mnuBar.add(mnuPrg);
+        frame.setJMenuBar(mnuBar);
+
+        mitKilep.addActionListener(e -> System.exit(0));
+    }
+
+    public static void main(String[] args) {
+        new GuiForm();
+    }
+}
