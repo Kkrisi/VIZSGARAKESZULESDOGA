@@ -18,7 +18,7 @@ public class GuiForm {
     private JPanel pnlMain;
 
     private JFrame frame;
-    private JMenuItem mitMent, mitBetolt;
+    private Item mitMent, mitBetolt;
 
     public GuiForm() {
         ini();
