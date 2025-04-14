@@ -151,3 +151,184 @@ public class GuiForm {
         new GuiForm();
     }
 }
+
+
+
+
+GUICONFIGMODELL, a felso kod-al egyutt van: 
+
+package hu.szamalk.modell;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public class GuiKonfigModell implements Serializable {
+    private List<String> comboSzovegek;
+    private List<String> listSzovegek;
+    private boolean chbMozgat;
+
+    public GuiKonfigModell() {
+        comboSzovegek = new ArrayList<>();
+        listSzovegek = new ArrayList<>();
+        chbMozgat = false;
+    }
+
+    public List<String> getComboSzovegek() {
+        return new ArrayList<>(comboSzovegek);
+    }
+
+    public void setComboSzovegek(List<String> comboSzovegek) {
+        this.comboSzovegek = comboSzovegek;
+    }
+
+    public List<String> getListSzovegek() {
+        return new ArrayList<>(listSzovegek);
+    }
+
+    public void setListSzovegek(List<String> listSzovegek) {
+        this.listSzovegek = listSzovegek;
+    }
+
+    public boolean isChbMozgat() {
+        return chbMozgat;
+    }
+
+    public void setChbMozgat(boolean chbMozgat) {
+        this.chbMozgat = chbMozgat;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class Ujsag  extends Media{
+    public Ujsag(String cim, int ev) {
+        super(cim, ev);
+    }
+}
+
+
+
+
+
+public class Media {
+    private String cim;
+    private int ev;
+
+    public Media(String cim, int ev) {
+        this.cim = cim;
+        this.ev = ev;
+    }
+
+    public String getCim() {
+        return cim;
+    }
+
+    public int getEv() {
+        return ev;
+    }
+
+    @Override
+    public String toString() {
+        return "Media{" +
+                "cim='" + cim + '\'' +
+                ", ev=" + ev +
+                '}';
+    }
+}
+
+
+
+
+
+
+public class Konyv extends Media implements Comparable<Konyv> {
+    //private String borito;
+    private Boritok borito;
+
+    //public Konyv(String cim, int ev, String borito) {
+    public Konyv(String cim, int ev, Boritok borito) {
+        super(cim, ev);
+        this.borito = borito;
+    }
+
+    /* cím szerinti rendezés: */
+    @Override
+    public int compareTo(Konyv o) {
+        return this.getCim().compareTo(o.getCim());
+    }
+
+    @Override
+    public String toString() {
+        String os = super.toString();
+        return os + "Konyv{" +
+                "borito='" + borito + '\'' +
+                '}';
+    }
+}
+
+
+
+
+
+
+
+
+
+public enum Boritok {
+    PIROS, KEK, ZOLD
+}
+
+
+
+
+public class Konyvtar {
+    private List<Media> mediak; //Konyv és Ujsag is lehet
+
+    public Konyvtar() {
+        mediak = new ArrayList<>();
+        //mediak.add(new Konyv("xxx_konyv1", 2000, "piros"));
+        mediak.add(new Konyv("xxx_konyv1", 2000, Boritok.PIROS));
+        mediak.add(new Konyv("abckonyv2", 2000, Boritok.ZOLD));
+        mediak.add(new Konyv("aaakonyv3", 2000, Boritok.KEK));
+        mediak.add(new Ujsag("újság1", 2020));
+    }
+
+    public List<Konyv> konyvekCimSzerint(){
+        /* Konyv típusok kigyűjtése: */
+        List<Konyv> konyvek = new ArrayList<>();
+        for (Media media : mediak) {
+            if(media instanceof Konyv){
+                konyvek.add((Konyv) media);
+            }
+        }
+
+        /* rendezés az alapértelmezett (Comparable) szerint: */
+        Collections.sort(konyvek);
+        return konyvek;
+    }
+
+    public void beolvas(){
+        try {
+            List<String> sorok = Files.readAllLines(Path.of("konyvek.txt"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+}
